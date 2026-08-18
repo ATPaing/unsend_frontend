@@ -3,7 +3,7 @@ import Button from '../ui/Button.jsx'
 
 function DashboardHeader({ isUnlocked, onUnlockClick, onLockClick, onLogoutClick }) {
   return (
-    <header className="z-20 flex shrink-0 items-center justify-end gap-3 border-b border-border bg-surface px-8 py-3.5">
+    <header className="z-20 flex shrink-0 items-center justify-end gap-2 border-b border-border bg-surface px-4 py-3 sm:gap-3 md:px-8 md:py-3.5">
       {isUnlocked ? (
         <Button
           type="button"

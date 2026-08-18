@@ -43,6 +43,7 @@ function AppSidebar({
   isUnlocked,
   onCreateJournal,
   onVaultStatusClick,
+  onNavigate,
   unreadNotificationCount = 0,
 }) {
   const VaultIcon = isUnlocked ? LockOpen : Lock
@@ -50,7 +51,7 @@ function AppSidebar({
     unreadNotificationCount > 99 ? '99+' : String(unreadNotificationCount)
 
   return (
-    <aside className="flex h-full w-[240px] shrink-0 flex-col border-r border-border bg-surface px-4 py-5">
+    <aside className="flex h-full w-full shrink-0 flex-col border-r border-border bg-surface px-4 py-5 md:w-[240px]">
       <div className="px-2">
         <p className="text-[1.65rem] font-bold leading-none tracking-tight text-brand">
           Unsend
@@ -76,6 +77,7 @@ function AppSidebar({
               key={label}
               to={to}
               end={to === '/'}
+              onClick={onNavigate}
               className={({ isActive }) => navClassName(isActive)}
             >
               <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
