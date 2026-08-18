@@ -1,34 +1,15 @@
 import { base64ToBytes, bytesToBase64, zeroize } from './base64.js'
-import { AES_GCM_KEY_LENGTH, AES_GCM_NONCE_LENGTH } from './constants.js'
+import { AES_GCM_NONCE_LENGTH } from './constants.js'
+import {
+  encryptStringWithAesGcm,
+  generateAesGcmKey,
+  generateAesGcmNonce,
+} from './aesGcm.js'
+import { encryptJournalMediaFile } from './encryptMedia.js'
 import { importPublicKeySpki } from './keys.js'
 
 function generateNonce() {
-  return crypto.getRandomValues(new Uint8Array(AES_GCM_NONCE_LENGTH))
-}
-
-async function generateJournalAesKey() {
-  return crypto.subtle.generateKey(
-    {
-      name: 'AES-GCM',
-      length: AES_GCM_KEY_LENGTH,
-    },
-    true,
-    ['encrypt', 'decrypt'],
-  )
-}
-
-async function encryptUtf8WithAesGcm(plaintext, aesKey, nonce) {
-  const bytes = new TextEncoder().encode(plaintext)
-  const ciphertext = await crypto.subtle.encrypt(
-    {
-      name: 'AES-GCM',
-      iv: nonce,
-    },
-    aesKey,
-    bytes,
-  )
-
-  return new Uint8Array(ciphertext)
+  return generateAesGcmNonce()
 }
 
 async function wrapAesKeyForPublicKey(aesKey, publicKeySpkiBytes) {
@@ -85,6 +66,7 @@ export async function encryptOwnerJournal({
   journalType = 'JOURNAL',
   unlockAt = null,
   recipients = [],
+  imageFile = null,
 }) {
   const ownerPublicKeySpkiBytes = base64ToBytes(ownerPublicKeyBase64)
 
@@ -96,12 +78,12 @@ export async function encryptOwnerJournal({
   let ownerEncryptedAesKey = null
 
   try {
-    aesKey = await generateJournalAesKey()
+    aesKey = await generateAesGcmKey()
     titleNonce = generateNonce()
     contentNonce = generateNonce()
 
-    encryptedTitle = await encryptUtf8WithAesGcm(title, aesKey, titleNonce)
-    encryptedContent = await encryptUtf8WithAesGcm(content, aesKey, contentNonce)
+    encryptedTitle = await encryptStringWithAesGcm(title, aesKey, titleNonce)
+    encryptedContent = await encryptStringWithAesGcm(content, aesKey, contentNonce)
     ownerEncryptedAesKey = await wrapAesKeyForPublicKey(
       aesKey,
       ownerPublicKeySpkiBytes,
@@ -143,7 +125,16 @@ export async function encryptOwnerJournal({
       payload.recipients = wrappedRecipients
     }
 
-    return payload
+    let encryptedMedia = null
+
+    if (imageFile) {
+      encryptedMedia = await encryptJournalMediaFile(imageFile, aesKey)
+    }
+
+    return {
+      payload,
+      encryptedMedia,
+    }
   } finally {
     zeroize(titleNonce)
     zeroize(contentNonce)
@@ -178,8 +169,8 @@ export async function encryptOwnerJournalUpdate({
     titleNonce = generateNonce()
     contentNonce = generateNonce()
 
-    encryptedTitle = await encryptUtf8WithAesGcm(title, aesKey, titleNonce)
-    encryptedContent = await encryptUtf8WithAesGcm(content, aesKey, contentNonce)
+    encryptedTitle = await encryptStringWithAesGcm(title, aesKey, titleNonce)
+    encryptedContent = await encryptStringWithAesGcm(content, aesKey, contentNonce)
 
     return {
       encryptedTitle: bytesToBase64(encryptedTitle),

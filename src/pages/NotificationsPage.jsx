@@ -15,7 +15,10 @@ import { useNotifications } from '../features/notifications/NotificationsContext
 import { useToast } from '../features/toast/ToastContext.jsx'
 import UnlockPinModal from '../features/vault/UnlockPinModal.jsx'
 import { useVault } from '../features/vault/useVault.js'
-import { encryptOwnerJournal } from '../utils/crypto/encryptJournal.js'
+import {
+  saveJournalWithMedia,
+  JournalMediaUploadError,
+} from '../features/journals/saveJournalWithMedia.js'
 import { ApiError } from '../services/api.js'
 
 function getInitials(name) {
@@ -75,14 +78,25 @@ function NotificationsPage() {
     openUnlockModal()
   }
 
-  async function handleSaveJournal(draft) {
-    const material = await ensureCryptoMaterial()
-    const payload = await encryptOwnerJournal({
-      title: draft.title,
-      content: draft.content,
-      ownerPublicKeyBase64: material.publicKey,
-    })
-    await journalService.createJournal(payload)
+  async function handleSaveJournal(draft, { updateToast, toastId } = {}) {
+    const onProgress = (message) => {
+      if (updateToast && toastId) {
+        updateToast(toastId, { status: 'loading', message, persistent: true })
+      }
+    }
+
+    try {
+      await saveJournalWithMedia(draft, {
+        ensureCryptoMaterial,
+        onProgress,
+      })
+    } catch (error) {
+      if (error instanceof JournalMediaUploadError) {
+        throw error
+      }
+
+      throw error
+    }
   }
 
   async function handleLogout() {

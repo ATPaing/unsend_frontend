@@ -34,7 +34,7 @@ function navClassName(isActive) {
   return `flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${
     isActive
       ? 'bg-brand-soft text-brand'
-      : 'text-slate-600 hover:bg-page hover:text-ink'
+      : 'text-muted hover:bg-page hover:text-ink'
   }`
 }
 

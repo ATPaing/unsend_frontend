@@ -9,7 +9,8 @@ import CreateJournalModal from '../features/journals/CreateJournalModal.jsx'
 import JournalReadingView from '../features/journals/JournalReadingView.jsx'
 import LockedTimeCapsuleView from '../features/journals/LockedTimeCapsuleView.jsx'
 import ShareJournalModal from '../features/journals/ShareJournalModal.jsx'
-import { encryptDraftForCreate } from '../features/journals/encryptDraftForCreate.js'
+import { saveJournalWithMedia, JournalMediaUploadError } from '../features/journals/saveJournalWithMedia.js'
+import { useJournalMediaImage } from '../features/journals/useJournalMediaImage.js'
 import { isCapsuleLockedClient } from '../features/journals/capsuleTime.js'
 import * as journalService from '../features/journals/journalService.js'
 import { useRealtimeEvent } from '../features/realtime/RealtimeContext.jsx'
@@ -54,6 +55,18 @@ function JournalDetailPage() {
   const isOwnedCapsule =
     !isShared && journal?.journalType === 'T_CAPSULE'
   const capsuleLocked = isCapsuleLockedClient(journal)
+  const canLoadMedia = Boolean(
+    journal && isUnlocked && privateKey && !capsuleLocked && decrypted,
+  )
+  const {
+    imageUrl,
+    status: imageStatus,
+    errorMessage: imageErrorMessage,
+  } = useJournalMediaImage({
+    journal,
+    privateKey,
+    enabled: canLoadMedia,
+  })
   const backTo = isShared
     ? '/shared'
     : isOwnedCapsule
@@ -303,11 +316,26 @@ function JournalDetailPage() {
     setIsShareOpen(true)
   }
 
-  async function handleSaveJournal(draft) {
-    const material = await ensureCryptoMaterial()
-    const payload = await encryptDraftForCreate(draft, material.publicKey)
-    const created = await journalService.createJournal(payload)
-    navigate(`/journals/${created.id}`)
+  async function handleSaveJournal(draft, { updateToast, toastId } = {}) {
+    const onProgress = (message) => {
+      if (updateToast && toastId) {
+        updateToast(toastId, { status: 'loading', message, persistent: true })
+      }
+    }
+
+    try {
+      const { journal: created } = await saveJournalWithMedia(draft, {
+        ensureCryptoMaterial,
+        onProgress,
+      })
+      navigate(`/journals/${created.id}`)
+    } catch (error) {
+      if (error instanceof JournalMediaUploadError) {
+        navigate(`/journals/${error.journal.id}`)
+      }
+
+      throw error
+    }
   }
 
   async function handleUpdateJournal(draft) {
@@ -525,6 +553,9 @@ function JournalDetailPage() {
             journal={journal}
             decrypted={decrypted}
             isUnlocked={isUnlocked}
+            imageUrl={imageUrl}
+            imageStatus={imageStatus}
+            imageErrorMessage={imageErrorMessage}
             access={journal.access || 'OWNED'}
             onEdit={handleEdit}
             onDelete={handleDeleteRequest}

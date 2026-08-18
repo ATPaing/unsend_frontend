@@ -313,7 +313,7 @@ function ShareJournalModal({ open, journal, onClose, onShared, onRevoked }) {
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Filter friends"
                   autoComplete="off"
-                  className="w-full rounded-xl border border-border bg-white py-2.5 pr-3 pl-10 text-sm text-ink placeholder:text-slate-400 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+                  className="w-full rounded-xl border border-border bg-surface py-2.5 pr-3 pl-10 text-sm text-ink placeholder:text-muted transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
                 />
               </div>
 

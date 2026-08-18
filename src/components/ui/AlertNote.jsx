@@ -3,7 +3,7 @@ import { Info } from 'lucide-react'
 function AlertNote({ title, children, compact = false }) {
   return (
     <aside
-      className={`flex gap-2.5 rounded-xl border-l-4 border-note-border bg-note text-slate-600 ${
+      className={`flex gap-2.5 rounded-xl border-l-4 border-note-border bg-note text-ink ${
         compact ? 'px-3 py-2 text-xs leading-relaxed' : 'px-4 py-3 text-sm'
       }`}
       role="note"
@@ -15,7 +15,7 @@ function AlertNote({ title, children, compact = false }) {
         aria-hidden="true"
       />
       <p>
-        {title ? <strong className="font-semibold text-slate-800">{title}</strong> : null}
+        {title ? <strong className="font-semibold text-ink">{title}</strong> : null}
         {title ? ' ' : null}
         {children}
       </p>

@@ -30,6 +30,7 @@ import {
   localDateTimeToIso,
 } from './capsuleTime.js'
 import { getServerNowMs } from '../time/serverClock.js'
+import { JournalMediaUploadError } from './saveJournalWithMedia.js'
 import JournalEditor from './JournalEditor.jsx'
 
 const EMPTY_FORM = {
@@ -297,27 +298,33 @@ function CreateJournalModal({
     setError('')
 
     const isPrivate = draft.visibility === 'private'
+    const hasImage = Boolean(draft.imageFile)
     const toastId = showToast({
       status: 'loading',
       message:
         mode === 'edit'
           ? 'Encrypting and updating your journal…'
-          : isCapsuleCreate
+          : hasImage
             ? 'Encrypting…'
-            : 'Encrypting and saving your journal…',
+            : isCapsuleCreate
+              ? 'Encrypting…'
+              : 'Encrypting and saving your journal…',
       persistent: true,
     })
 
     try {
-      await onSave?.({
-        title: draft.title,
-        content: draft.content,
-        visibility: draft.visibility,
-        imageFile: draft.imageFile,
-        sharedWith: isPrivate ? [] : draft.sharedWith,
-        journalType: draft.journalType,
-        unlockAt: draft.unlockAt,
-      })
+      await onSave?.(
+        {
+          title: draft.title,
+          content: draft.content,
+          visibility: draft.visibility,
+          imageFile: draft.imageFile,
+          sharedWith: isPrivate ? [] : draft.sharedWith,
+          journalType: draft.journalType,
+          unlockAt: draft.unlockAt,
+        },
+        { updateToast, toastId },
+      )
 
       updateToast(toastId, {
         status: 'success',
@@ -325,8 +332,12 @@ function CreateJournalModal({
           mode === 'edit'
             ? 'Journal updated securely.'
             : isCapsuleCreate
-              ? 'Time capsule encrypted and locked.'
-              : 'Encrypted and saved securely.',
+              ? hasImage
+                ? 'Time capsule encrypted and locked with image.'
+                : 'Time capsule encrypted and locked.'
+              : hasImage
+                ? 'Encrypted and saved securely.'
+                : 'Encrypted and saved securely.',
         persistent: false,
         duration: 3500,
       })
@@ -335,6 +346,19 @@ function CreateJournalModal({
       setPendingDraft(null)
       onClose()
     } catch (saveError) {
+      if (saveError instanceof JournalMediaUploadError) {
+        updateToast(toastId, {
+          status: 'error',
+          message: saveError.message,
+          persistent: false,
+          duration: 5500,
+        })
+        setIsLockConfirmOpen(false)
+        setPendingDraft(null)
+        onClose()
+        return
+      }
+
       if (import.meta.env.DEV) {
         console.error('Journal save failed', saveError)
       }
@@ -501,7 +525,7 @@ function CreateJournalModal({
                 maxLength={JOURNAL_TITLE_MAX_LENGTH}
                 placeholder="Journal title"
                 disabled={isSaving}
-                className="w-full border-0 border-b border-border bg-transparent pb-3 text-2xl font-bold tracking-tight text-ink placeholder:font-semibold placeholder:text-slate-400 focus:border-brand focus:outline-none"
+                className="w-full border-0 border-b border-border bg-transparent pb-3 text-2xl font-bold tracking-tight text-ink placeholder:font-semibold placeholder:text-muted focus:border-brand focus:outline-none"
               />
               <p className="mt-1.5 text-right text-[11px] text-muted">
                 {titleLength} / {JOURNAL_TITLE_MAX_LENGTH}
@@ -554,7 +578,7 @@ function CreateJournalModal({
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isSaving}
-                  className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-slate-300 px-4 py-3 text-sm font-medium text-muted transition hover:border-brand hover:text-brand"
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-border px-4 py-3 text-sm font-medium text-muted transition hover:border-brand hover:text-brand"
                 >
                   <ImageIcon size={16} strokeWidth={1.75} aria-hidden="true" />
                   Add image
@@ -593,7 +617,7 @@ function CreateJournalModal({
                         setError('')
                       }}
                       disabled={isSaving}
-                      className={`mt-1 w-full rounded-xl border bg-white px-3 py-2.5 text-sm text-ink ${
+                      className={`mt-1 w-full rounded-xl border bg-surface px-3 py-2.5 text-sm text-ink ${
                         error ? 'border-danger' : 'border-border'
                       }`}
                     />
@@ -608,7 +632,7 @@ function CreateJournalModal({
                         setError('')
                       }}
                       disabled={isSaving}
-                      className={`mt-1 w-full rounded-xl border bg-white px-3 py-2.5 text-sm text-ink ${
+                      className={`mt-1 w-full rounded-xl border bg-surface px-3 py-2.5 text-sm text-ink ${
                         error ? 'border-danger' : 'border-border'
                       }`}
                     />
@@ -747,7 +771,7 @@ function CreateJournalModal({
                           setFriendQuery(event.target.value)
                           setError('')
                         }}
-                        className="w-full rounded-xl border border-border bg-white py-2.5 pr-3 pl-10 text-sm text-ink placeholder:text-slate-400 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+                        className="w-full rounded-xl border border-border bg-surface py-2.5 pr-3 pl-10 text-sm text-ink placeholder:text-muted transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
                       />
                     </div>
 
@@ -862,7 +886,7 @@ function CreateJournalModal({
                 className="mt-0.5 shrink-0 text-brand"
                 aria-hidden="true"
               />
-              <p className="text-xs leading-relaxed text-slate-600">
+              <p className="text-xs leading-relaxed text-ink">
                 {isCapsuleCreate
                   ? `Your capsule is encrypted on this device before it leaves your browser. Unsend cannot read it — and neither can anyone until the unlock time.${
                       isPrivate ? '' : ' Selected friends receive sealed access now.'

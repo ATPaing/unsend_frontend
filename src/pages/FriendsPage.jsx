@@ -22,7 +22,10 @@ import { useToast } from '../features/toast/ToastContext.jsx'
 import UnlockPinModal from '../features/vault/UnlockPinModal.jsx'
 import { useVault } from '../features/vault/useVault.js'
 import { useDebouncedValue } from '../hooks/useDebouncedValue.js'
-import { encryptOwnerJournal } from '../utils/crypto/encryptJournal.js'
+import {
+  saveJournalWithMedia,
+  JournalMediaUploadError,
+} from '../features/journals/saveJournalWithMedia.js'
 import { FRIEND_SEARCH_MIN_CHARS } from '../utils/journal/constants.js'
 import { ApiError } from '../services/api.js'
 
@@ -204,14 +207,21 @@ function FriendsPage() {
     openUnlockModal()
   }
 
-  async function handleSaveJournal(draft) {
-    const material = await ensureCryptoMaterial()
-    const payload = await encryptOwnerJournal({
-      title: draft.title,
-      content: draft.content,
-      ownerPublicKeyBase64: material.publicKey,
-    })
-    await journalService.createJournal(payload)
+  async function handleSaveJournal(draft, { updateToast, toastId } = {}) {
+    const onProgress = (message) => {
+      if (updateToast && toastId) {
+        updateToast(toastId, { status: 'loading', message, persistent: true })
+      }
+    }
+
+    try {
+      await saveJournalWithMedia(draft, {
+        ensureCryptoMaterial,
+        onProgress,
+      })
+    } catch (error) {
+      throw error
+    }
   }
 
   async function handleLogout() {
@@ -434,7 +444,7 @@ function FriendsPage() {
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Search by username"
               autoComplete="off"
-              className="w-full rounded-xl border border-border bg-white py-2.5 pr-3 pl-10 text-sm text-ink placeholder:text-slate-400 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+              className="w-full rounded-xl border border-border bg-surface py-2.5 pr-3 pl-10 text-sm text-ink placeholder:text-muted transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
             />
           </div>
 

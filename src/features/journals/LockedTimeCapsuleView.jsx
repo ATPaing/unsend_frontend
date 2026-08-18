@@ -189,7 +189,7 @@ function LockedTimeCapsuleView({
                 value={extendDate}
                 onChange={(event) => setExtendDate(event.target.value)}
                 disabled={isExtending}
-                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-ink"
+                className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-ink"
               />
             </label>
             <label className="block text-xs font-medium text-muted">
@@ -199,7 +199,7 @@ function LockedTimeCapsuleView({
                 value={extendTime}
                 onChange={(event) => setExtendTime(event.target.value)}
                 disabled={isExtending}
-                className="mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-ink"
+                className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-ink"
               />
             </label>
           </div>

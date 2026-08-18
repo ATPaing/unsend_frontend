@@ -7,9 +7,11 @@ import Button from '../components/ui/Button.jsx'
 import { useAuth } from '../features/auth/useAuth.js'
 import CreateJournalModal from '../features/journals/CreateJournalModal.jsx'
 import JournalCard from '../features/journals/JournalCard.jsx'
-import { encryptDraftForCreate } from '../features/journals/encryptDraftForCreate.js'
+import {
+  saveJournalWithMedia,
+  JournalMediaUploadError,
+} from '../features/journals/saveJournalWithMedia.js'
 import { useJournals } from '../features/journals/useJournals.js'
-import * as journalService from '../features/journals/journalService.js'
 import UnlockPinModal from '../features/vault/UnlockPinModal.jsx'
 import { useVault } from '../features/vault/useVault.js'
 
@@ -72,12 +74,28 @@ function TimeCapsulesPage() {
     openUnlockModal()
   }
 
-  async function handleSaveCapsule(draft) {
-    const material = await ensureCryptoMaterial()
-    const payload = await encryptDraftForCreate(draft, material.publicKey)
-    const created = await journalService.createJournal(payload)
-    await prependJournal(created)
-    navigate(`/journals/${created.id}`)
+  async function handleSaveCapsule(draft, { updateToast, toastId } = {}) {
+    const onProgress = (message) => {
+      if (updateToast && toastId) {
+        updateToast(toastId, { status: 'loading', message, persistent: true })
+      }
+    }
+
+    try {
+      const { journal } = await saveJournalWithMedia(draft, {
+        ensureCryptoMaterial,
+        onProgress,
+      })
+      await prependJournal(journal)
+      navigate(`/journals/${journal.id}`)
+    } catch (error) {
+      if (error instanceof JournalMediaUploadError) {
+        await prependJournal(error.journal)
+        navigate(`/journals/${error.journal.id}`)
+      }
+
+      throw error
+    }
   }
 
   async function handleLogout() {

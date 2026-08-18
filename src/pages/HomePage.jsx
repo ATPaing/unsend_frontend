@@ -7,9 +7,11 @@ import { useAuth } from '../features/auth/useAuth.js'
 import CreateJournalModal from '../features/journals/CreateJournalModal.jsx'
 import RecentJournals from '../features/journals/RecentJournals.jsx'
 import SharedJournalsEmpty from '../features/journals/SharedJournalsEmpty.jsx'
-import { encryptDraftForCreate } from '../features/journals/encryptDraftForCreate.js'
+import {
+  saveJournalWithMedia,
+  JournalMediaUploadError,
+} from '../features/journals/saveJournalWithMedia.js'
 import { useJournals } from '../features/journals/useJournals.js'
-import * as journalService from '../features/journals/journalService.js'
 import UnlockPinModal from '../features/vault/UnlockPinModal.jsx'
 import { useVault } from '../features/vault/useVault.js'
 
@@ -55,12 +57,26 @@ function HomePage() {
     openUnlockModal()
   }
 
-  async function handleSaveJournal(draft) {
-    const material = await ensureCryptoMaterial()
-    const payload = await encryptDraftForCreate(draft, material.publicKey)
-    // TODO: Upload journal image to object storage when media storage is implemented.
-    const created = await journalService.createJournal(payload)
-    await prependJournal(created)
+  async function handleSaveJournal(draft, { updateToast, toastId } = {}) {
+    const onProgress = (message) => {
+      if (updateToast && toastId) {
+        updateToast(toastId, { status: 'loading', message, persistent: true })
+      }
+    }
+
+    try {
+      const { journal } = await saveJournalWithMedia(draft, {
+        ensureCryptoMaterial,
+        onProgress,
+      })
+      await prependJournal(journal)
+    } catch (error) {
+      if (error instanceof JournalMediaUploadError) {
+        await prependJournal(error.journal)
+      }
+
+      throw error
+    }
   }
 
   async function handleLogout() {

@@ -22,6 +22,8 @@ function JournalReadingView({
   decrypted,
   isUnlocked,
   imageUrl = null,
+  imageStatus = 'idle',
+  imageErrorMessage = '',
   access = 'OWNED',
   onEdit,
   onDelete,
@@ -197,6 +199,10 @@ function JournalReadingView({
             blurWhenLocked={false}
           />
 
+          {imageStatus === 'loading' ? (
+            <p className="mt-5 text-sm text-muted">Loading encrypted image…</p>
+          ) : null}
+
           {imageUrl ? (
             <figure className="mt-5">
               <img
@@ -205,6 +211,12 @@ function JournalReadingView({
                 className="max-h-[480px] w-full rounded-2xl object-contain"
               />
             </figure>
+          ) : null}
+
+          {imageStatus === 'error' || imageStatus === 'forbidden' ? (
+            <p className="mt-5 text-sm text-muted" role="status">
+              {imageErrorMessage || 'Unable to load the encrypted image.'}
+            </p>
           ) : null}
 
           <div

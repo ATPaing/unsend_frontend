@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { KeyRound } from 'lucide-react'
 import AlertNote from '../../components/ui/AlertNote.jsx'
 import Button from '../../components/ui/Button.jsx'
@@ -14,6 +14,8 @@ function UnlockPinModal({ open, onClose }) {
   const [errors, setErrors] = useState({})
   const [formError, setFormError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const isSubmittingRef = useRef(false)
+  isSubmittingRef.current = isSubmitting
 
   useEffect(() => {
     if (!open) {
@@ -26,7 +28,7 @@ function UnlockPinModal({ open, onClose }) {
     setIsSubmitting(false)
 
     function handleKeyDown(event) {
-      if (event.key === 'Escape' && !isSubmitting) {
+      if (event.key === 'Escape' && !isSubmittingRef.current) {
         onClose()
       }
     }
@@ -36,7 +38,7 @@ function UnlockPinModal({ open, onClose }) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [open, onClose, isSubmitting])
+  }, [open, onClose])
 
   if (!open) {
     return null
@@ -92,7 +94,7 @@ function UnlockPinModal({ open, onClose }) {
         onClick={(event) => event.stopPropagation()}
       >
         <header className="text-center">
-          <h2 id={titleId} className="text-lg font-semibold text-slate-800">
+          <h2 id={titleId} className="text-lg font-semibold text-ink">
             Unlock vault
           </h2>
           <p className="mt-1 text-sm text-muted">

@@ -9,8 +9,10 @@ import FormInput from '../components/ui/FormInput.jsx'
 import ToggleSwitch from '../components/ui/ToggleSwitch.jsx'
 import { useAuth } from '../features/auth/useAuth.js'
 import CreateJournalModal from '../features/journals/CreateJournalModal.jsx'
-import { encryptDraftForCreate } from '../features/journals/encryptDraftForCreate.js'
-import * as journalService from '../features/journals/journalService.js'
+import {
+  saveJournalWithMedia,
+  JournalMediaUploadError,
+} from '../features/journals/saveJournalWithMedia.js'
 import {
   AUTO_LOCK_OPTIONS,
   THEME_OPTIONS,
@@ -170,11 +172,26 @@ function SettingsPage() {
     navigate('/login', { replace: true })
   }
 
-  async function handleSaveJournal(draft) {
-    const material = await ensureCryptoMaterial()
-    const payload = await encryptDraftForCreate(draft, material.publicKey)
-    const created = await journalService.createJournal(payload)
-    navigate(`/journals/${created.id}`)
+  async function handleSaveJournal(draft, { updateToast, toastId } = {}) {
+    const onProgress = (message) => {
+      if (updateToast && toastId) {
+        updateToast(toastId, { status: 'loading', message, persistent: true })
+      }
+    }
+
+    try {
+      const { journal } = await saveJournalWithMedia(draft, {
+        ensureCryptoMaterial,
+        onProgress,
+      })
+      navigate(`/journals/${journal.id}`)
+    } catch (error) {
+      if (error instanceof JournalMediaUploadError) {
+        navigate(`/journals/${error.journal.id}`)
+      }
+
+      throw error
+    }
   }
 
   function resetPasswordForm() {

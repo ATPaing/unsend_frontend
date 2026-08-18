@@ -11,13 +11,15 @@ import {
 } from '../features/journals/capsuleTime.js'
 import LiveCountdown from '../features/journals/LiveCountdown.jsx'
 import { useSharedJournals } from '../features/journals/SharedJournalsContext.jsx'
-import * as journalService from '../features/journals/journalService.js'
 import { formatJournalDate } from '../features/journals/mapJournalCard.js'
 import CiphertextReveal from '../components/ui/CiphertextReveal.jsx'
 import UnlockPinModal from '../features/vault/UnlockPinModal.jsx'
 import { useVault } from '../features/vault/useVault.js'
 import { decryptJournalForAccess } from '../utils/crypto/decryptJournal.js'
-import { encryptOwnerJournal } from '../utils/crypto/encryptJournal.js'
+import {
+  saveJournalWithMedia,
+  JournalMediaUploadError,
+} from '../features/journals/saveJournalWithMedia.js'
 
 function getInitials(name) {
   return String(name || '?').trim().slice(0, 1).toUpperCase()
@@ -175,17 +177,26 @@ function SharedWithMePage() {
     setIsUnlockOpen(true)
   }
 
-  async function handleSaveJournal(draft) {
-    const material = await ensureCryptoMaterial()
-    const payload = await encryptOwnerJournal({
-      title: draft.title,
-      content: draft.content,
-      ownerPublicKeyBase64: material.publicKey,
-      journalType: draft.journalType || 'JOURNAL',
-      unlockAt: draft.unlockAt || null,
-    })
-    const created = await journalService.createJournal(payload)
-    navigate(`/journals/${created.id}`)
+  async function handleSaveJournal(draft, { updateToast, toastId } = {}) {
+    const onProgress = (message) => {
+      if (updateToast && toastId) {
+        updateToast(toastId, { status: 'loading', message, persistent: true })
+      }
+    }
+
+    try {
+      const { journal } = await saveJournalWithMedia(draft, {
+        ensureCryptoMaterial,
+        onProgress,
+      })
+      navigate(`/journals/${journal.id}`)
+    } catch (error) {
+      if (error instanceof JournalMediaUploadError) {
+        navigate(`/journals/${error.journal.id}`)
+      }
+
+      throw error
+    }
   }
 
   async function handleLogout() {

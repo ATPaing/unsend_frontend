@@ -23,5 +23,6 @@ export async function encryptDraftForCreate(draft, ownerPublicKeyBase64) {
     journalType: draft.journalType || 'JOURNAL',
     unlockAt: draft.unlockAt || null,
     recipients,
+    imageFile: draft.imageFile ?? null,
   })
 }

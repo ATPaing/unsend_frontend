@@ -27,7 +27,7 @@ function ToolbarButton({ label, onClick, disabled, children }) {
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-slate-600 transition hover:bg-page hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
+      className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted transition hover:bg-page hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
     >
       {children}
     </button>
@@ -99,7 +99,7 @@ function JournalEditor({ value, onChange, disabled = false }) {
               type="button"
               disabled={disabled || mode !== 'write'}
               onClick={() => setIsHeadingOpen((open) => !open)}
-              className="inline-flex h-8 cursor-pointer items-center gap-1 rounded-lg px-2 text-slate-600 transition hover:bg-page hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-8 cursor-pointer items-center gap-1 rounded-lg px-2 text-muted transition hover:bg-page hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Heading"
               title="Heading"
             >
@@ -206,7 +206,7 @@ function JournalEditor({ value, onChange, disabled = false }) {
           placeholder="Start writing…"
           disabled={disabled}
           rows={9}
-          className="mt-3 min-h-[200px] w-full resize-none border-0 bg-transparent text-sm leading-relaxed text-ink placeholder:text-slate-400 focus:outline-none"
+          className="mt-3 min-h-[200px] w-full resize-none border-0 bg-transparent text-sm leading-relaxed text-ink placeholder:text-muted focus:outline-none"
         />
       ) : (
         <div className="mt-3 min-h-[200px] rounded-xl bg-page/60 px-4 py-3">

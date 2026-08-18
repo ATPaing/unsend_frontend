@@ -109,3 +109,26 @@ export async function decryptJournalForAccess(journal, privateKey) {
 
   return decryptOwnerJournal(journal, privateKey)
 }
+
+/**
+ * Import the journal AES key for media decrypt (owner or shared recipient).
+ */
+export async function importJournalAesKey(journal, privateKey) {
+  const wrappedKeyBase64 =
+    journal?.access === 'SHARED' || journal?.encryptedAesKey
+      ? journal.encryptedAesKey
+      : journal.ownerEncryptedAesKey
+
+  if (!wrappedKeyBase64) {
+    throw new Error('Journal is missing a wrapped AES key')
+  }
+
+  let wrappedAesKeyBytes = null
+
+  try {
+    wrappedAesKeyBytes = base64ToBytes(wrappedKeyBase64)
+    return unwrapJournalAesKey(wrappedAesKeyBytes, privateKey)
+  } finally {
+    zeroize(wrappedAesKeyBytes)
+  }
+}

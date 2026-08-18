@@ -34,6 +34,14 @@ html.dark {
 }
 
 @layer base {
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
   html,
   body,
   #root {

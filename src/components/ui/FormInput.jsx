@@ -30,7 +30,7 @@ function FormInput({
 
       <div className="relative">
         {Icon ? (
-          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted">
             <Icon size={iconSize} strokeWidth={1.75} aria-hidden="true" />
           </span>
         ) : null}
