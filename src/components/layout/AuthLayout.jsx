@@ -6,7 +6,7 @@ function AuthLayout({
 }) {
   const background =
     variant === 'register'
-      ? 'bg-[radial-gradient(ellipse_at_top,_var(--color-page-tint)_0%,_var(--color-page)_55%,_#f8f8fc_100%)]'
+      ? 'bg-page bg-[radial-gradient(ellipse_at_50%_20%,_var(--color-brand-soft)_0%,_transparent_58%)]'
       : 'bg-page'
 
   const maxWidth = variant === 'register' ? 'max-w-[480px]' : 'max-w-[420px]'

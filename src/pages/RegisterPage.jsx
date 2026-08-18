@@ -10,7 +10,7 @@ function RegisterPage() {
 
       <section className="w-full rounded-2xl bg-surface px-7 py-6 shadow-[var(--shadow-card)]">
         <header>
-          <h1 className="text-2xl font-bold text-slate-900">Register</h1>
+          <h1 className="text-2xl font-bold text-ink">Register</h1>
           <p className="mt-1 text-sm text-muted">
             Secure your thoughts with zero-knowledge encryption.
           </p>

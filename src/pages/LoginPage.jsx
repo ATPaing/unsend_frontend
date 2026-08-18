@@ -26,7 +26,7 @@ function LoginPage() {
         <BrandMark showIcon taglineCase="upper" />
 
         <header className="mt-8 text-center">
-          <h1 className="text-xl font-semibold text-slate-800">Welcome back</h1>
+          <h1 className="text-xl font-semibold text-ink">Welcome back</h1>
           <p className="mt-1 text-sm text-muted">
             Your private space is waiting for you.
           </p>
