@@ -40,15 +40,18 @@ export function AuthProvider({ children }) {
   }, [])
 
   const login = useCallback(async (username, password) => {
-    const nextUser = await authService.login(username, password)
-    setUser(nextUser)
-    return nextUser
+    await authService.login(username, password)
+    // Prefer session payload (includes isAdmin) over login's user object.
+    const sessionUser = await authService.getSession()
+    setUser(sessionUser)
+    return sessionUser
   }, [])
 
   const signup = useCallback(async (username, password, cryptoMaterial) => {
-    const nextUser = await authService.signup(username, password, cryptoMaterial)
-    setUser(nextUser)
-    return nextUser
+    await authService.signup(username, password, cryptoMaterial)
+    const sessionUser = await authService.getSession()
+    setUser(sessionUser)
+    return sessionUser
   }, [])
 
   const logout = useCallback(async () => {
