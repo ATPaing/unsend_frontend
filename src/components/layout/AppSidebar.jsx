@@ -1,4 +1,5 @@
 import {
+  Activity,
   Bell,
   BookOpen,
   Clock3,
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import Button from '../ui/Button.jsx'
+import { useAuth } from '../../features/auth/useAuth.js'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Home', icon: Home, available: true },
@@ -46,6 +48,8 @@ function AppSidebar({
   onNavigate,
   unreadNotificationCount = 0,
 }) {
+  const { user } = useAuth()
+  const showAdminNav = Boolean(user?.isAdmin)
   const VaultIcon = isUnlocked ? LockOpen : Lock
   const badgeLabel =
     unreadNotificationCount > 99 ? '99+' : String(unreadNotificationCount)
@@ -101,6 +105,16 @@ function AppSidebar({
             </button>
           ),
         )}
+        {showAdminNav ? (
+          <NavLink
+            to="/admin"
+            onClick={onNavigate}
+            className={({ isActive }) => navClassName(isActive)}
+          >
+            <Activity size={18} strokeWidth={1.75} aria-hidden="true" />
+            <span className="flex-1">Admin Dashboard</span>
+          </NavLink>
+        ) : null}
       </nav>
 
       <div className="mt-4 flex items-center gap-3 border-t border-border px-1 pt-4">

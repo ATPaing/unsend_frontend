@@ -25,6 +25,25 @@ export function ProtectedRoute({ children }) {
   return children
 }
 
+/** Authenticated + isAdmin; non-admins are sent home (not to login). */
+export function AdminRoute({ children }) {
+  const { isAuthenticated, isLoading, user } = useAuth()
+
+  if (isLoading) {
+    return <AuthLoadingScreen />
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+
+  if (!user?.isAdmin) {
+    return <Navigate to="/" replace />
+  }
+
+  return children
+}
+
 export function GuestRoute({ children }) {
   const { isAuthenticated, isLoading } = useAuth()
 

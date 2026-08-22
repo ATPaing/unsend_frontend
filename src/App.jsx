@@ -1,5 +1,10 @@
 import { Route, Routes } from 'react-router-dom'
-import { GuestRoute, ProtectedRoute } from './features/auth/ProtectedRoute.jsx'
+import {
+  AdminRoute,
+  GuestRoute,
+  ProtectedRoute,
+} from './features/auth/ProtectedRoute.jsx'
+import AdminMonitoringPage from './pages/AdminMonitoringPage.jsx'
 import FriendsPage from './pages/FriendsPage.jsx'
 import HomePage from './pages/HomePage.jsx'
 import JournalDetailPage from './pages/JournalDetailPage.jsx'
@@ -76,6 +81,14 @@ function App() {
           <ProtectedRoute>
             <SettingsPage />
           </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <AdminMonitoringPage />
+          </AdminRoute>
         }
       />
       <Route
