@@ -138,6 +138,8 @@ function AdminMonitoringPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
 
   const [overview, setOverview] = useState(null)
+  const [uptimeBaseline, setUptimeBaseline] = useState(null)
+  const [nowMs, setNowMs] = useState(() => Date.now())
   const [loadError, setLoadError] = useState('')
   const [isInitialLoading, setIsInitialLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -153,6 +155,12 @@ function AdminMonitoringPage() {
     try {
       const data = await getMonitoringOverview()
       setOverview(data)
+      setUptimeBaseline({
+        fetchedAt: Date.now(),
+        systemSeconds: data?.system?.uptimeSeconds,
+        backendSeconds: data?.backend?.uptimeSeconds,
+      })
+      setNowMs(Date.now())
     } catch (error) {
       const message =
         error instanceof ApiError
@@ -161,6 +169,7 @@ function AdminMonitoringPage() {
       setLoadError(message)
       if (!soft) {
         setOverview(null)
+        setUptimeBaseline(null)
       }
     } finally {
       setIsInitialLoading(false)
@@ -171,6 +180,35 @@ function AdminMonitoringPage() {
   useEffect(() => {
     loadOverview({ soft: false })
   }, [loadOverview])
+
+  // Keep server/backend uptime displays ticking between refreshes.
+  useEffect(() => {
+    if (!uptimeBaseline) {
+      return undefined
+    }
+
+    const id = window.setInterval(() => {
+      setNowMs(Date.now())
+    }, 1000)
+
+    return () => window.clearInterval(id)
+  }, [uptimeBaseline])
+
+  function liveUptimeSeconds(baselineSeconds) {
+    if (
+      !uptimeBaseline ||
+      typeof baselineSeconds !== 'number' ||
+      !Number.isFinite(baselineSeconds)
+    ) {
+      return baselineSeconds
+    }
+
+    const elapsedSeconds = Math.max(
+      0,
+      Math.floor((nowMs - uptimeBaseline.fetchedAt) / 1000),
+    )
+    return Math.floor(baselineSeconds) + elapsedSeconds
+  }
 
   function handleVaultStatusClick() {
     if (isUnlocked) {
@@ -329,7 +367,9 @@ function AdminMonitoringPage() {
                       Server uptime
                     </p>
                     <p className="mt-1 text-lg font-semibold tabular-nums text-ink">
-                      {formatUptime(system?.uptimeSeconds)}
+                      {formatUptime(
+                        liveUptimeSeconds(uptimeBaseline?.systemSeconds),
+                      )}
                     </p>
                   </div>
                   <div className="rounded-xl border border-border bg-page/60 p-4">
@@ -337,7 +377,9 @@ function AdminMonitoringPage() {
                       Backend uptime
                     </p>
                     <p className="mt-1 text-lg font-semibold tabular-nums text-ink">
-                      {formatUptime(backend?.uptimeSeconds)}
+                      {formatUptime(
+                        liveUptimeSeconds(uptimeBaseline?.backendSeconds),
+                      )}
                     </p>
                   </div>
                 </div>
