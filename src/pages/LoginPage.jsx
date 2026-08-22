@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import AlertNote from '../components/ui/AlertNote.jsx'
 import BrandMark from '../components/common/BrandMark.jsx'
 import SecurityBadges from '../components/common/SecurityBadges.jsx'
 import AuthLayout from '../components/layout/AuthLayout.jsx'
@@ -31,6 +32,15 @@ function LoginPage() {
             Your private space is waiting for you.
           </p>
         </header>
+
+        <div className="mt-6">
+          <AlertNote title="Admin test account:" compact>
+            Use username <strong className="font-semibold">admin_test_acc</strong>,
+            password <strong className="font-semibold">000000</strong>, and vault
+            PIN <strong className="font-semibold">123456</strong> if you want to
+            try the admin dashboard.
+          </AlertNote>
+        </div>
 
         <LoginForm />
       </section>
